@@ -15,5 +15,15 @@ const LoginModule = {
             email: "",
             password: ""
         }
-    })
+    }),
+    mutations: {
+        setLoginEmail: (state: LoginState, email: string) => {
+            state.loginForm.email = email;
+        },
+        setLoginPassword: (state: LoginState, password: string) => {
+            state.loginForm.password = password;
+        }
+    }
 }
+
+export default LoginModule
