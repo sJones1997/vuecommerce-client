@@ -1,20 +1,29 @@
 
 
+
 export interface LoginState {
-    loginForm: LoginForm
+    loginForm: LoginForm,
+    formErrors: FormError[]
 }
 
-export interface LoginForm {
+interface LoginForm {
     email: string,
     password: string
 }
+
+export interface FormError {
+    type: string
+    errorMsg: string
+}
+
 
 const LoginModule = {
     state: (): LoginState =>({
         loginForm: {
             email: "",
             password: ""
-        }
+        },
+        formErrors: []
     }),
     mutations: {
         setLoginEmail: (state: LoginState, email: string) => {
@@ -22,6 +31,21 @@ const LoginModule = {
         },
         setLoginPassword: (state: LoginState, password: string) => {
             state.loginForm.password = password;
+        },
+        setFormErrors: (state: LoginState, formErrors: FormError[]) => {
+            state.formErrors = formErrors;
+        }
+
+    },
+    getters: {
+        getLoginEmail(state: LoginState){
+            return state.loginForm.email
+        },
+        getLoginPassword(state: LoginState){
+            return state.loginForm.password
+        },
+        getFormErrors(state: LoginState){
+            return state.formErrors;
         }
     }
 }

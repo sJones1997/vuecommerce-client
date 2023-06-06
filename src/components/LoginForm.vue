@@ -1,7 +1,7 @@
 <template>
     <div>
         <form
-            @submit="submitForm">
+            @submit.prevent="submitForm">
             <div>
                 <h3>VueCommerce App</h3>
             </div>
@@ -16,13 +16,24 @@
                 placeholder="Email" 
                 v-model="email"
                 required>
+                <p 
+                v-if="errorLookup('email').length" 
+                class="error-text">
+                    {{ errorLookup('email') }}
+                </p>
             </div>
             <div>
                 <input 
                 type="password" 
                 class="input-field" 
                 placeholder="Password" 
-                :value="password">
+                v-model="password"
+                required>
+                <p 
+                v-if="errorLookup('password').length" 
+                class="error-text">
+                    {{ errorLookup('password') }}
+                </p>
             </div>
             <div>
                 <input type="submit" value="Sign in">
@@ -35,27 +46,42 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+
+import { FormError } from '@/store/modules/LoginModule';
+import { WritableComputedRef, computed } from 'vue';
 import { useStore } from 'vuex';
 
 
 const store = useStore();
 
 const email = computed<string>({
-    get(): string { return store.state.email },
+    get(): string { return store.getters.getLoginEmail },
     set(email: string): void { store.commit("setLoginEmail", email) }
 })
 
 const password = computed<string>({
-    get(): string { return store.state.password},
-    set(password: string) { store.commit("setLoginPassword", password) }
+    get(): string { return store.getters.getLoginPassword },
+    set(password: string): void { store.commit("setLoginPassword", password) }
 })
 
-const errors = ref<string[]>([])
+let formErrors: WritableComputedRef<FormError[]> = computed({
+    get(): FormError[] { return store.getters.getFormErrors },
+    set(setFormErrors: FormError[]): void { store.commit("setFormErrors", setFormErrors) }
+})
+
+const errorLookup = (lookupKey: string) : string => {
+    const index = formErrors.value.findIndex(error => error.type === lookupKey)
+    if(index !== -1){
+        return formErrors.value[index].errorMsg
+    }
+    return "";
+}
 
 const validateEmail = (email: string) => {
     //eslint-disable-next-line
-    const pattern = new RegExp("/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/", "g");
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    console.log(pattern.test(email))
+
     if (pattern.test(email)) {
         return true;
     }
@@ -64,7 +90,7 @@ const validateEmail = (email: string) => {
 
 const validatePassword = (password: string): boolean => {
 
-    const pattern = new RegExp("/^(?=.*[A-Z])(?=.*d)(?=.*[!@#$%^&*])/");
+    const pattern = /^(?=.*[A-Z])(?=.*d)(?=.*[!@#$%^&*])/
     const passwordValidation = password.length > 8 && pattern.test(password)
 
     if(passwordValidation){
@@ -75,18 +101,31 @@ const validatePassword = (password: string): boolean => {
 
 }
 
-const submitForm = () => {
+const submitForm = (): void => {
+
+    let errors: FormError[] = []
+    formErrors.value = errors
 
     if(!validateEmail(email.value)){
-        errors.value.push("Please ensure that you have entered a valid email address.");
+        const emailFormError: FormError = {
+            type: "email",
+            errorMsg: "Please ensure you have entered a valid email address."
+        }
+        errors.push(emailFormError);
     }
 
     if(!validatePassword(password.value)){
-        errors.value.push("Please ensure your password is at least 8 characters long, contains at least one capital letter and special character.")
+        const passwordFormError: FormError = {
+            type: "password",
+            errorMsg: "Please ensure your password is at least 8 characters long, contains at least one capital letter and special character."
+        }
+        errors.push(passwordFormError)
     }
 
-    if(errors.value.length === 0){
-        // store.commit("loginModule/setDetails", {email, password})
+    if(errors.length){
+        formErrors.value = errors
+    } else {
+        console.log("submit")
     }
 
 }
@@ -153,6 +192,12 @@ form input[type=submit]{
     font-weight: 600;
     font-size: 0.9em;
     cursor: pointer;
+}
+
+.error-text {
+    color: #B96F6D;
+    font-size: 0.8em;
+    font-weight: 600;
 }
 
 </style>
