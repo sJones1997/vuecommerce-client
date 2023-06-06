@@ -1,7 +1,9 @@
 <template>
     <div>
         <form
-            @submit.prevent="submitForm">
+            @submit.prevent="submitForm"
+            class="login-form"
+            >
             <div>
                 <h3>VueCommerce App</h3>
             </div>
@@ -14,11 +16,14 @@
                 type="text" 
                 class="input-field" 
                 placeholder="Email" 
+                id="login-email"
                 v-model="email"
                 required>
                 <p 
                 v-if="errorLookup('email').length" 
-                class="error-text">
+                class="error-text"
+                id="email-error"
+                >
                     {{ errorLookup('email') }}
                 </p>
             </div>
@@ -27,16 +32,22 @@
                 type="password" 
                 class="input-field" 
                 placeholder="Password" 
+                id="login-password"
                 v-model="password"
                 required>
                 <p 
                 v-if="errorLookup('password').length" 
-                class="error-text">
+                class="error-text"
+                id="password-error"
+                >
                     {{ errorLookup('password') }}
                 </p>
             </div>
             <div>
-                <input type="submit" value="Sign in">
+                <input 
+                type="submit" 
+                
+                value="Sign in">
             </div>
             <div>
                 <p>New here? <router-link to="/">Create an account!</router-link></p>
@@ -47,6 +58,7 @@
 
 <script setup lang="ts">
 
+import LoginConstants from '@/constants/loginConstants';
 import { FormError } from '@/store/modules/LoginModule';
 import { WritableComputedRef, computed } from 'vue';
 import { useStore } from 'vuex';
@@ -80,7 +92,6 @@ const errorLookup = (lookupKey: string) : string => {
 const validateEmail = (email: string) => {
     //eslint-disable-next-line
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    console.log(pattern.test(email))
 
     if (pattern.test(email)) {
         return true;
@@ -90,7 +101,7 @@ const validateEmail = (email: string) => {
 
 const validatePassword = (password: string): boolean => {
 
-    const pattern = /^(?=.*[A-Z])(?=.*d)(?=.*[!@#$%^&*])/
+    const pattern = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     const passwordValidation = password.length > 8 && pattern.test(password)
 
     if(passwordValidation){
@@ -107,19 +118,11 @@ const submitForm = (): void => {
     formErrors.value = errors
 
     if(!validateEmail(email.value)){
-        const emailFormError: FormError = {
-            type: "email",
-            errorMsg: "Please ensure you have entered a valid email address."
-        }
-        errors.push(emailFormError);
+        errors.push(LoginConstants.emailFormError);
     }
 
     if(!validatePassword(password.value)){
-        const passwordFormError: FormError = {
-            type: "password",
-            errorMsg: "Please ensure your password is at least 8 characters long, contains at least one capital letter and special character."
-        }
-        errors.push(passwordFormError)
+        errors.push(LoginConstants.passwordFormError)
     }
 
     if(errors.length){
@@ -133,7 +136,7 @@ const submitForm = (): void => {
 </script>
 <style scoped>
 
-form {
+.login-form {
     margin: auto;
     width:40%;
     text-align: left;
@@ -146,7 +149,7 @@ form {
     left:0;
 }
 
-form > *{
+.login-form  > *{
     padding: 1.5em 2em;
 }
 
@@ -181,7 +184,7 @@ form > *{
     font-weight: 600;
 }
 
-form input[type=submit]{
+.login-form input[type=submit]{
     font-family: 'Inter', sans-serif;
     background-color:#002147;
     border-radius: 15px;
